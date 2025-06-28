@@ -1,0 +1,70 @@
+{
+  "name": "mcp-supervisor",
+  "main": "dist/index.js",
+  "description": "Model Context Protocol server for VSCode project supervisor",
+  "private": true,
+  "version": "1.0.0",
+  "author": "Zied Akremi <ziedakremi@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build:start-server": "bun run build && bun run start:server",
+    "build:start": "bun dist/index.js",
+    "build": "bunx tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "dev": "bun --watch src/index.ts",
+    "format:check": "bunx prettier --check src tests",
+    "format": "bunx prettier --write src tests",
+    "lint:fix": "bunx eslint src tests --ext .ts --fix",
+    "lint": "bunx eslint src tests --ext .ts",
+    "mcp:http": "bun src/start-server.ts --transport http --port 3000",
+    "mcp:inspect": "mcp inspect --server-command 'bun src/index.ts'",
+    "mcp:stdio": "bun src/index.ts",
+    "start:dev:server": "bun src/start-server.ts",
+    "start:dev": "bun src/index.ts",
+    "start:server": "bun dist/start-server.js",
+    "start:watch": "bun --watch src/index.ts",
+    "start": "bun dist/index.js",
+    "test:coverage": "bunx jest --coverage",
+    "test:failed": "bunx jest --detectOpenHandles --silent",
+    "test:jest": "bunx jest --detectOpenHandles --forceExit",
+    "test:watch": "bunx jest --watchAll",
+    "test": "bun test",
+    "type-check": "bunx tsc --noEmit"
+  },
+  "keywords": [
+    "vscode",
+    "mcp",
+    "model-context-protocol",
+    "workspace",
+    "code-intelligence"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.13.0",
+    "express": "^5.1.0",
+    "inversify": "^6.0.2",
+    "reflect-metadata": "^0.2.1",
+    "winston": "^3.11.0",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.29.0",
+    "@types/bun": "latest",
+    "@types/express": "^5.0.3",
+    "@types/jest": "^30.0.0",
+    "@types/minimatch": "^5.1.2",
+    "@types/node": "^20.11.30",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.1",
+    "eslint": "^9.29.0",
+    "jest": "^30.0.3",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.6.1",
+    "ts-jest": "^29.4.0",
+    "ts-node": "^10.9.2"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

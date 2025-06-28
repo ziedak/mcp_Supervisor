@@ -1,0 +1,317 @@
+{
+  "plan": {
+    "requiredSections": [
+      "problem",
+      "approach",
+      "architecture",
+      "implementation-steps",
+      "testing-strategy",
+      "performance-considerations",
+      "security-analysis",
+      "rollback-plan",
+      "success-metrics"
+    ]
+  },
+  "phases": {
+    "draft": {
+      "enforce": [],
+      "requirePlan": false,
+      "requireHumanApproval": false
+    },
+    "planned": {
+      "enforce": ["rule:plan-completeness", "rule:architecture-review"],
+      "requirePlan": true,
+      "requireHumanApproval": false
+    },
+    "design-review": {
+      "enforce": [
+        "group:design-quality",
+        "rule:solid-principles",
+        "rule:design-patterns"
+      ],
+      "requirePlan": true,
+      "requireHumanApproval": true
+    },
+    "coded": {
+      "enforce": [
+        "group:code-quality",
+        "group:testing",
+        "rule:performance-thresholds"
+      ],
+      "requirePlan": true,
+      "requireHumanApproval": false
+    },
+    "security-scan": {
+      "enforce": [
+        "group:security",
+        "rule:dependency-vulnerabilities",
+        "rule:secrets-detection"
+      ],
+      "requirePlan": true,
+      "requireHumanApproval": false
+    },
+    "performance-test": {
+      "enforce": [
+        "group:performance",
+        "rule:load-test-results",
+        "rule:memory-usage"
+      ],
+      "requirePlan": true,
+      "requireHumanApproval": false
+    },
+    "pre-production": {
+      "enforce": [
+        "group:comprehensive-quality",
+        "group:security",
+        "group:performance",
+        "rule:documentation-completeness"
+      ],
+      "requirePlan": true,
+      "requireHumanApproval": true
+    },
+    "production-ready": {
+      "enforce": ["rule:final-approval", "rule:deployment-checklist"],
+      "requirePlan": true,
+      "requireHumanApproval": true
+    }
+  },
+  "rules": {
+    "plan-completeness": {
+      "id": "plan-completeness",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "validate",
+      "target": "plan",
+      "enforcement": "hard",
+      "instruction": "Verify that all required plan sections are complete and detailed enough for implementation."
+    },
+    "architecture-review": {
+      "id": "architecture-review",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "analyze-and-instruct",
+      "target": "architecture",
+      "enforcement": "hard",
+      "instruction": "Review the architecture design for scalability, maintainability, and adherence to best practices."
+    },
+    "solid-principles": {
+      "id": "solid-principles",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "analyze-and-instruct",
+      "refactorAllowed": true,
+      "target": "code",
+      "enforcement": "soft",
+      "instruction": "Analyze code for SOLID principles violations and suggest improvements. Focus on Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion."
+    },
+    "design-patterns": {
+      "id": "design-patterns",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "analyze-and-instruct",
+      "target": "code",
+      "enforcement": "soft",
+      "instruction": "Identify opportunities to apply appropriate design patterns for better code organization and maintainability."
+    },
+    "test-coverage": {
+      "id": "test-coverage",
+      "type": "threshold",
+      "target": "test.coverage",
+      "value": 0.85,
+      "enforcement": "hard",
+      "message": "Test coverage must be at least 85% for production code."
+    },
+    "branch-coverage": {
+      "id": "branch-coverage",
+      "type": "threshold",
+      "target": "test.branch-coverage",
+      "value": 0.8,
+      "enforcement": "hard",
+      "message": "Branch coverage must be at least 80%."
+    },
+    "mutation-score": {
+      "id": "mutation-score",
+      "type": "threshold",
+      "target": "test.mutation-score",
+      "value": 0.75,
+      "enforcement": "soft",
+      "message": "Mutation testing score should be at least 75% for robust tests."
+    },
+    "no-console-logs": {
+      "id": "no-console-logs",
+      "type": "pattern",
+      "pattern": "console\\.(log|debug|info|warn|error)",
+      "target": "code",
+      "enforcement": "hard",
+      "message": "Use proper logging framework instead of console statements."
+    },
+    "no-hardcoded-secrets": {
+      "id": "no-hardcoded-secrets",
+      "type": "pattern",
+      "pattern": "(password|secret|key|token)\\s*[:=]\\s*['\"][^'\"]+['\"]",
+      "target": "code",
+      "enforcement": "hard",
+      "message": "No hardcoded secrets allowed. Use environment variables or secure vaults."
+    },
+    "proper-error-handling": {
+      "id": "proper-error-handling",
+      "type": "pattern",
+      "pattern": "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}",
+      "target": "code",
+      "enforcement": "hard",
+      "message": "Empty catch blocks are not allowed. Implement proper error handling."
+    },
+    "typescript-strict": {
+      "id": "typescript-strict",
+      "type": "pattern",
+      "pattern": "any\\s*[;,\\)\\]]",
+      "target": "code",
+      "enforcement": "soft",
+      "message": "Avoid using 'any' type. Use specific types for better type safety."
+    },
+    "performance-thresholds": {
+      "id": "performance-thresholds",
+      "type": "threshold",
+      "target": "performance.response-time",
+      "value": 0.2,
+      "enforcement": "hard",
+      "message": "API response time must be under 200ms for 95th percentile."
+    },
+    "memory-usage": {
+      "id": "memory-usage",
+      "type": "threshold",
+      "target": "performance.memory-usage",
+      "value": 0.8,
+      "enforcement": "soft",
+      "message": "Memory usage should not exceed 80% of available memory."
+    },
+    "load-test-results": {
+      "id": "load-test-results",
+      "type": "threshold",
+      "target": "performance.concurrent-users",
+      "value": 1000,
+      "enforcement": "hard",
+      "message": "System must handle at least 1000 concurrent users."
+    },
+    "dependency-vulnerabilities": {
+      "id": "dependency-vulnerabilities",
+      "type": "plugin",
+      "plugin": "./plugins/securityScanner.js",
+      "enforcement": "hard",
+      "message": "No high or critical severity vulnerabilities allowed in dependencies."
+    },
+    "secrets-detection": {
+      "id": "secrets-detection",
+      "type": "plugin",
+      "plugin": "./plugins/secretsScanner.js",
+      "enforcement": "hard",
+      "message": "No secrets or sensitive data detected in code."
+    },
+    "license-compliance": {
+      "id": "license-compliance",
+      "type": "plugin",
+      "plugin": "./plugins/licenseChecker.js",
+      "enforcement": "soft",
+      "message": "All dependencies must have compatible licenses."
+    },
+    "code-complexity": {
+      "id": "code-complexity",
+      "type": "threshold",
+      "target": "code.cyclomatic-complexity",
+      "value": 0.1,
+      "enforcement": "soft",
+      "message": "Cyclomatic complexity should be kept low. Consider refactoring complex functions."
+    },
+    "technical-debt": {
+      "id": "technical-debt",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "analyze-and-instruct",
+      "target": "code",
+      "enforcement": "soft",
+      "instruction": "Identify technical debt, code smells, and areas needing refactoring. Prioritize by impact and effort."
+    },
+    "api-documentation": {
+      "id": "api-documentation",
+      "type": "pattern",
+      "pattern": "^\\s*(export\\s+)?(async\\s+)?function\\s+\\w+.*\\{",
+      "target": "code",
+      "enforcement": "soft",
+      "message": "Public functions should have JSDoc documentation."
+    },
+    "documentation-completeness": {
+      "id": "documentation-completeness",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "validate",
+      "target": "documentation",
+      "enforcement": "hard",
+      "instruction": "Verify that all public APIs, configuration options, and deployment procedures are properly documented."
+    },
+    "deployment-checklist": {
+      "id": "deployment-checklist",
+      "type": "plugin",
+      "plugin": "./plugins/deploymentChecker.js",
+      "enforcement": "hard",
+      "message": "All deployment checklist items must be completed."
+    },
+    "final-approval": {
+      "id": "final-approval",
+      "type": "ai",
+      "agent": "senior-architect",
+      "strategy": "validate",
+      "target": "complete-solution",
+      "enforcement": "hard",
+      "instruction": "Conduct final comprehensive review of the complete solution including code, tests, documentation, and deployment readiness."
+    }
+  },
+  "ruleGroups": {
+    "design-quality": [
+      "solid-principles",
+      "design-patterns",
+      "architecture-review"
+    ],
+    "code-quality": [
+      "test-coverage",
+      "no-console-logs",
+      "proper-error-handling",
+      "typescript-strict",
+      "code-complexity"
+    ],
+    "testing": ["test-coverage", "branch-coverage", "mutation-score"],
+    "security": [
+      "dependency-vulnerabilities",
+      "secrets-detection",
+      "no-hardcoded-secrets",
+      "license-compliance"
+    ],
+    "performance": [
+      "performance-thresholds",
+      "memory-usage",
+      "load-test-results"
+    ],
+    "documentation": ["api-documentation", "documentation-completeness"],
+    "comprehensive-quality": [
+      "test-coverage",
+      "branch-coverage",
+      "no-console-logs",
+      "proper-error-handling",
+      "typescript-strict",
+      "technical-debt",
+      "api-documentation"
+    ]
+  },
+  "extensions": {
+    "plugins": [
+      "./plugins/securityScanner.js",
+      "./plugins/secretsScanner.js",
+      "./plugins/licenseChecker.js",
+      "./plugins/deploymentChecker.js",
+      "./plugins/performanceAnalyzer.js",
+      "./plugins/customRiskDetector.ts"
+    ]
+  },
+  "defaults": {
+    "enforcement": "soft"
+  }
+}

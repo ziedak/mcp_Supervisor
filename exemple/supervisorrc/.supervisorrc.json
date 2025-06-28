@@ -1,0 +1,68 @@
+{
+  "plan": {
+    "requiredSections": ["problem", "steps", "tests", "risks"]
+  },
+  "phases": {
+    "draft": {
+      "enforce": []
+    },
+    "planned": {
+      "requirePlan": true
+    },
+    "coded": {
+      "enforce": ["rule:coverage", "rule:test-structure"]
+    },
+    "audited": {
+      "enforce": ["group:quality", "group:security"]
+    },
+    "final": {
+      "requireHumanApproval": true
+    }
+  },
+  "rules": {
+    "coverage": {
+      "id": "coverage",
+      "type": "threshold",
+      "target": "test.coverage",
+      "value": 0.75,
+      "enforcement": "hard",
+      "message": "Test coverage must be at least 75%."
+    },
+    "no-console": {
+      "id": "no-console",
+      "type": "pattern",
+      "pattern": "console\\.log",
+      "target": "code",
+      "enforcement": "soft"
+    },
+    "solid": {
+      "id": "solid",
+      "type": "ai",
+      "agent": "copilot",
+      "strategy": "analyze-and-instruct",
+      "refactorAllowed": true,
+      "target": "code",
+      "enforcement": "soft",
+      "instruction": "Inspect whether the code violates SOLID principles and suggest improvements."
+    },
+    "dep-scan": {
+      "id": "dep-scan",
+      "type": "plugin",
+      "plugin": "./plugins/securityScanner.js",
+      "enforcement": "hard"
+    }
+  },
+  "ruleGroups": {
+    "quality": ["coverage", "solid", "no-console"],
+    "security": ["dep-scan"]
+  },
+  "extensions": {
+    "plugins": [
+      "./plugins/securityScanner.js",
+      "./plugins/customRiskDetector.ts"
+    ]
+  },
+  "defaults": {
+    "enforcement": "soft"
+  }
+}
