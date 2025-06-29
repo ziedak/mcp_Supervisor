@@ -1,10 +1,18 @@
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import {
   IContextStore,
   ContextEntry,
   ContextQuery,
   ContextStoreStats,
 } from '../interfaces/IContextStore';
+import type { IContextPersistence } from '../interfaces/IContextPersistence';
+import { TYPES } from '../../config/types';
+import {
+  buildKey,
+  generateId,
+  getWorkTime,
+  inferType,
+} from '../../utils/utils';
 
 /**
  * Implementation of the context store service
@@ -18,6 +26,19 @@ export class ContextStore implements IContextStore {
     totalRetrievalTime: 0,
   };
 
+  constructor(
+    @inject(TYPES.ContextPersistence)
+    private readonly persistence: IContextPersistence
+  ) {}
+
+  async initialize(): Promise<void> {
+    const entries = await this.persistence.load();
+    for (const entry of entries) {
+      const fullKey = buildKey(entry.key, entry.namespace);
+      this.store.set(fullKey, { ...entry });
+    }
+  }
+
   /**
    * Store a context entry
    */
@@ -28,12 +49,12 @@ export class ContextStore implements IContextStore {
     tags: string[] = [],
     expiry?: Date
   ): Promise<void> {
-    const fullKey = this.buildKey(key, namespace);
+    const fullKey = buildKey(key, namespace);
     const entry: ContextEntry = {
-      id: this.generateId(),
+      id: generateId(),
       key,
       value,
-      type: this.inferType(value),
+      type: inferType(value),
       namespace,
       tags: [...tags],
       expiry,
@@ -42,6 +63,7 @@ export class ContextStore implements IContextStore {
     };
 
     this.store.set(fullKey, entry);
+    await this.persistence.save(Array.from(this.store.values()));
   }
 
   /**
@@ -51,23 +73,23 @@ export class ContextStore implements IContextStore {
     const startTime = Date.now();
     this.stats.totalRequests++;
 
-    const fullKey = this.buildKey(key, namespace);
+    const fullKey = buildKey(key, namespace);
     const entry = this.store.get(fullKey);
 
     if (!entry) {
-      this.updateRetrievalTime(startTime);
+      this.stats.totalRetrievalTime += getWorkTime(startTime);
       return null;
     }
 
     // Check if expired
     if (entry.expiry && entry.expiry < new Date()) {
       this.store.delete(fullKey);
-      this.updateRetrievalTime(startTime);
+      this.stats.totalRetrievalTime += getWorkTime(startTime);
       return null;
     }
 
     this.stats.cacheHits++;
-    this.updateRetrievalTime(startTime);
+    this.stats.totalRetrievalTime += getWorkTime(startTime);
     return entry.value;
   }
 
@@ -75,7 +97,7 @@ export class ContextStore implements IContextStore {
    * Check if a context entry exists
    */
   async has(key: string, namespace = 'default'): Promise<boolean> {
-    const fullKey = this.buildKey(key, namespace);
+    const fullKey = buildKey(key, namespace);
     const entry = this.store.get(fullKey);
 
     if (!entry) return false;
@@ -93,8 +115,10 @@ export class ContextStore implements IContextStore {
    * Delete a context entry
    */
   async delete(key: string, namespace = 'default'): Promise<boolean> {
-    const fullKey = this.buildKey(key, namespace);
-    return this.store.delete(fullKey);
+    const fullKey = buildKey(key, namespace);
+    const deleted = this.store.delete(fullKey);
+    await this.persistence.save(Array.from(this.store.values()));
+    return deleted;
   }
 
   /**
@@ -233,6 +257,7 @@ export class ContextStore implements IContextStore {
       cacheHits: 0,
       totalRetrievalTime: 0,
     };
+    await this.persistence.save([]);
   }
 
   /**
@@ -301,9 +326,10 @@ export class ContextStore implements IContextStore {
    */
   async import(entries: ContextEntry[]): Promise<void> {
     for (const entry of entries) {
-      const fullKey = this.buildKey(entry.key, entry.namespace);
+      const fullKey = buildKey(entry.key, entry.namespace);
       this.store.set(fullKey, { ...entry });
     }
+    await this.persistence.save(Array.from(this.store.values()));
   }
 
   /**
@@ -313,29 +339,10 @@ export class ContextStore implements IContextStore {
     return this.query({});
   }
 
-  // Private helper methods
-
-  private buildKey(key: string, namespace: string): string {
-    return `${namespace}:${key}`;
-  }
-
-  private generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private inferType(
-    value: any
-  ): 'string' | 'number' | 'boolean' | 'object' | 'array' {
-    if (Array.isArray(value)) return 'array';
-    if (value === null || value === undefined) return 'object';
-    const type = typeof value;
-    if (type === 'string' || type === 'number' || type === 'boolean') {
-      return type;
-    }
-    return 'object';
-  }
-
-  private updateRetrievalTime(startTime: number): void {
-    this.stats.totalRetrievalTime += Date.now() - startTime;
+  /**
+   * Flush in-memory context store to disk
+   */
+  async flush(): Promise<void> {
+    await this.persistence.save(Array.from(this.store.values()));
   }
 }

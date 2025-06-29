@@ -134,9 +134,8 @@ You can use MCP Supervisor as a backend for [VS Code Copilot Agent Mode](https:/
    bun install
    bun run dev
    ```
-2. **Install the [Model Context Protocol TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)** in VS Code.
-3. **Configure your `.supervisorrc.json` as above.**
-4. **Connect the Copilot Agent to your running MCP Supervisor instance.**
+2. **Configure your `.supervisorrc.json` as above.**
+3. **Connect the Copilot Agent to your running MCP Supervisor instance.**
 
 This enables advanced context/resource/tool management for AI agents and developer workflows in VS Code.
 
@@ -152,34 +151,32 @@ You can run MCP Supervisor in a containerized environment and pass all required 
 docker build -t mcp-supervisor .
 ```
 
-### Run the container (recommended)
+### Run the container
+
+## STDIO (recommended)
 
 ```bash
 docker run --rm -it \
   -v $(pwd)/your-workspace:/workspace \
-  -v $(pwd)/.supervisorrc.json:/app/.supervisorrc.json:ro \
-  -p 3000:3000 \
-  mcp-supervisor /workspace --transport http --port 3000 --host 0.0.0.0
+  mcp-supervisor  --transport stdio
 ```
 
-- Replace `your-workspace` with your actual workspace directory.
+## http
+
+```bash
+docker run --rm -it \
+  -p 3000:3000 \
+  mcp-supervisor --transport http --port 3000 --host 0.0.0.0
+```
+
 - You can change the port, host, and transport as needed.
 - All arguments supported by `start-server.ts` are available (see below).
 
 ### Supported Arguments
 
-- `workspace_path` (default: `/workspace`)
 - `--transport <stdio|http>` (default: `stdio`)
 - `--port <number>` (default: `3000`)
 - `--host <host>` (default: `localhost`)
-
-Example for stdio transport:
-
-```bash
-docker run --rm -it \
-  -v $(pwd)/your-workspace:/workspace \
-  mcp-supervisor /workspace --transport stdio
-```
 
 ---
 

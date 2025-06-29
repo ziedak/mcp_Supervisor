@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Container } from 'inversify';
+import { Container, ContainerModule } from 'inversify';
 import { ILogger } from '../core/interfaces/ILogger';
 import { Logger } from '../core/services/Logger';
 import { TYPES } from './types';
@@ -18,6 +18,7 @@ import { IPromptEnricher } from '../core/interfaces/IPromptEnricher';
 import { IContextStore } from '../core/interfaces/IContextStore';
 import { IMCPHandler } from '../core/interfaces/IMCPHandler';
 import { IAuditLogService } from '../core/interfaces/IAuditLogService';
+import type { IContextPersistence } from '../core/interfaces/IContextPersistence';
 
 // Import new services
 import { RuleEngine } from '../core/services/RuleEngine';
@@ -27,9 +28,11 @@ import { PromptEnricher } from '../core/services/PromptEnricher';
 import { ContextStore } from '../core/services/ContextStore';
 import { MCPHandler } from '../core/services/MCPHandler';
 import { AuditLogService } from '../core/services/AuditLogService';
+import { FileContextPersistence } from '../core/services/FileContextPersistence';
 import {
   ConfigurationManager,
   IConfigurationManager,
+  ConfigurationManagerFactory,
 } from '../core/services/ConfigurationManager';
 import {
   PluginManager,
@@ -41,6 +44,8 @@ import {
   RuleExecutorFactory,
   IRuleExecutorFactory,
 } from '../core/services/RuleExecutors';
+import { WorkspaceManager } from '../core/services/WorkspaceManager';
+import { IWorkspaceManager } from '../core/interfaces/IWorkspaceManager';
 
 /**
  * Singleton container instance for dependency injection
@@ -56,37 +61,64 @@ const serverConfig: IMcpServerConfig = {
   version: '1.0.0',
 };
 
-// Phase 1 service bindings
-container.bind<ILogger>(TYPES.Logger).to(Logger);
-container
-  .bind<IMcpServerConfig>(TYPES.McpServerConfig)
-  .toConstantValue(serverConfig);
+// Utility/Stateless classes: direct instantiation (no DI binding needed)
+// Example: If you have stateless helpers, import and use them directly in services.
+// import { SomeUtility } from '../utils/SomeUtility';
+// (No container.bind for these)
 
-// New RuleEngine architecture services
-container
-  .bind<IConfigurationManager>(TYPES.ConfigurationManager)
-  .to(ConfigurationManager)
-  .inSingletonScope();
-container.bind<IPluginRegistry>(TYPES.PluginRegistry).to(PluginRegistry);
-container.bind<IPluginManager>(TYPES.PluginManager).to(PluginManager);
-container
-  .bind<IRuleExecutorFactory>(TYPES.RuleExecutorFactory)
-  .to(RuleExecutorFactory);
+// Group DI bindings using container modules for clarity and maintainability
+import { interfaces } from 'inversify';
 
-// Register services (updated RuleEngine with new dependencies)
-container.bind<IRuleEngine>(TYPES.RuleEngine).to(RuleEngine);
-console.log('[DI] Bound RuleEngine:', container.isBound(TYPES.RuleEngine));
-container.bind<IPlanValidator>(TYPES.PlanValidator).to(PlanValidator);
-container.bind<IWorkValidator>(TYPES.WorkValidator).to(WorkValidator);
-container.bind<IPromptEnricher>(TYPES.PromptEnricher).to(PromptEnricher);
-container.bind<IContextStore>(TYPES.ContextStore).to(ContextStore);
-container.bind<IMCPHandler>(TYPES.MCPHandler).to(MCPHandler);
-container.bind<IAuditLogService>(TYPES.AuditLogService).to(AuditLogService);
+// Only bind services that require DI (stateful, have dependencies, or need to be mocked)
+const coreModule = new ContainerModule((bind: interfaces.Bind) => {
+  // Logger and config
+  container.bind<ILogger>(TYPES.Logger).toDynamicValue(() => new Logger());
+  container
+    .bind<IMcpServerConfig>(TYPES.McpServerConfig)
+    .toConstantValue(serverConfig);
 
-container
-  .bind<IMcpWorkspaceSupervisor>(TYPES.McpWorkspaceSupervisor)
-  .to(McpWorkspaceSupervisor);
+  // Core services (stateful, have dependencies)
+  bind<IConfigurationManager>(TYPES.ConfigurationManager)
+    .to(ConfigurationManager)
+    .inSingletonScope();
+  bind<IPluginRegistry>(TYPES.PluginRegistry).to(PluginRegistry);
+  bind<IPluginManager>(TYPES.PluginManager).to(PluginManager);
+  bind<IRuleExecutorFactory>(TYPES.RuleExecutorFactory).to(RuleExecutorFactory);
+  bind<IRuleEngine>(TYPES.RuleEngine).to(RuleEngine);
+  bind<IPlanValidator>(TYPES.PlanValidator).to(PlanValidator);
+  bind<IWorkValidator>(TYPES.WorkValidator).to(WorkValidator);
+  bind<IPromptEnricher>(TYPES.PromptEnricher).to(PromptEnricher);
+  bind<IContextPersistence>(TYPES.ContextPersistence)
+    .to(FileContextPersistence)
+    .inSingletonScope();
+  bind<IContextStore>(TYPES.ContextStore)
+    .toDynamicValue(ctx => {
+      const persistence = ctx.container.get<IContextPersistence>(
+        TYPES.ContextPersistence
+      );
+      const store = new ContextStore(persistence);
+      // Optionally, initialize on startup
+      store.initialize?.();
+      return store;
+    })
+    .inSingletonScope();
+  bind<IMCPHandler>(TYPES.MCPHandler).to(MCPHandler);
+  bind<IAuditLogService>(TYPES.AuditLogService).to(AuditLogService);
+  bind<IWorkspaceManager>(TYPES.WorkspaceManager)
+    .to(WorkspaceManager)
+    .inSingletonScope();
+  bind<ConfigurationManagerFactory>(
+    TYPES.ConfigurationManagerFactory
+  ).toFactory<ConfigurationManager>(context => {
+    return () =>
+      context.container.get<ConfigurationManager>(TYPES.ConfigurationManager);
+  });
+  bind<IMcpWorkspaceSupervisor>(TYPES.McpWorkspaceSupervisor).to(
+    McpWorkspaceSupervisor
+  );
+});
+
+container.load(coreModule);
 
 // Export the singleton container instance
-// console.log('[DI] All bindings:', container._bindingDictionary?._map ? Array.from(container._bindingDictionary._map.keys()) : 'Unavailable');
 export { container };

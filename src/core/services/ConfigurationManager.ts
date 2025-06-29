@@ -35,16 +35,14 @@ export interface IConfigurationManager {
 @injectable()
 export class ConfigurationManager implements IConfigurationManager {
   private config: SupervisorConfigType | null = null;
-  private readonly logger: ILogger;
+
   private readonly defaultConfigPaths = [
     '.supervisorrc.json',
     'supervisor.config.json',
     '.config/supervisor.json',
   ];
 
-  constructor(@inject(TYPES.Logger) logger: ILogger) {
-    this.logger = logger;
-  }
+  constructor(@inject(TYPES.Logger) private readonly logger: ILogger) {}
 
   /**
    * Load configuration from file
@@ -185,6 +183,16 @@ export class ConfigurationManager implements IConfigurationManager {
   }
 
   /**
+   * Flush in-memory config to disk
+   */
+  async flush(configPath?: string): Promise<void> {
+    if (!this.config) return;
+    const path = configPath || this.getDefaultConfigPath();
+    writeFileSync(path, JSON.stringify(this.config, null, 2), 'utf-8');
+    this.logger.info(`Configuration flushed to: ${path}`);
+  }
+
+  /**
    * Find configuration file in default locations
    */
   private findConfigFile(): string | null {
@@ -197,3 +205,6 @@ export class ConfigurationManager implements IConfigurationManager {
     return null;
   }
 }
+
+// Factory type for ConfigurationManager
+export type ConfigurationManagerFactory = () => ConfigurationManager;

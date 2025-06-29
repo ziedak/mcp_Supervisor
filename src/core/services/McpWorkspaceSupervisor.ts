@@ -9,6 +9,7 @@ import type { IContextStore } from '../interfaces/IContextStore';
 import type { IRuleEngine } from '../interfaces/IRuleEngine';
 import type { IConfigurationManager } from './ConfigurationManager';
 import type { IPluginManager } from './PluginManager';
+import { IContextPersistence } from '../interfaces/IContextPersistence';
 
 /**
  * Main workspace Supervisor service implementation

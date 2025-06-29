@@ -945,7 +945,11 @@ export class TestContextFactory {
       phase: 'coded',
       target: 'code',
       code: 'function hello() { return "world"; }',
-      metrics: { coverage: 0.85 },
+      metrics: {
+        coverage: 0.85,
+        'branch-coverage': 0.8,
+        'code.complexity': 0.05,
+      },
     };
   }
 
@@ -972,7 +976,7 @@ export class TestContextFactory {
         'branch-coverage': 0.88,
         'unit-coverage': 0.95,
         'integration-coverage': 0.85,
-        complexity: 0.15,
+        'code.complexity': 0.05,
         performance: { score: 0.87 },
       },
       metadata: {

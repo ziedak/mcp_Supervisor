@@ -13,8 +13,11 @@ export const TYPES = {
   ContextStore: Symbol.for('ContextStore'),
   MCPHandler: Symbol.for('MCPHandler'),
   ConfigurationManager: Symbol.for('ConfigurationManager'),
+  ConfigurationManagerFactory: Symbol.for('ConfigurationManagerFactory'),
   PluginRegistry: Symbol.for('PluginRegistry'),
   PluginManager: Symbol.for('PluginManager'),
   RuleExecutorFactory: Symbol.for('RuleExecutorFactory'),
   AuditLogService: Symbol.for('AuditLogService'),
+  ContextPersistence: Symbol.for('ContextPersistence'),
+  WorkspaceManager: Symbol.for('WorkspaceManager'),
 };

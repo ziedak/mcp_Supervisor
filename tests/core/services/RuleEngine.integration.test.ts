@@ -826,13 +826,16 @@ describe('RuleEngine Integration Tests - Advanced Real-World Scenarios', () => {
 
       // All executions should complete
       expect(results.length).toBe(3);
-      results.forEach(result => {
-        expect(result.length).toBeGreaterThan(0);
-        expect(result.every(r => r.passed)).toBe(true);
-      });
+      // Basic context: all rules should pass
+      expect(results[0].length).toBeGreaterThan(0);
+      expect(results[0].every(r => r.passed)).toBe(true);
 
-      // Results should be different based on context
-      expect(results[0].some(r => r.passed)).toBe(true);
+      // Complex context: all rules should pass
+      expect(results[1].length).toBeGreaterThan(0);
+      expect(results[1].every(r => r.passed)).toBe(true);
+
+      // Failing context: at least one rule should fail
+      expect(results[2].length).toBeGreaterThan(0);
       expect(results[2].some(r => !r.passed)).toBe(true);
     });
 
